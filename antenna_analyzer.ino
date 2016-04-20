@@ -147,7 +147,7 @@ void swr_list_sweep_and_fill() {
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
     }
-    long freq_khz = freq_hz / 100000ULL;
+    long freq_khz = freq_hz / 1000ULL * SI5351_FREQ_MULT;
 
     if (swr < g_swr_min) {
       g_swr_min = swr;
@@ -327,7 +327,7 @@ void process_display_swr() {
 
   int val_fwd = analogRead(0);
   int val_rfl = analogRead(1);
-  long freq_khz = g_active_band.freq / 100000ULL;
+  long freq_khz = g_active_band.freq / 1000ULL * SI5351_FREQ_MULT;
 
   double swr = swr_calculate(val_fwd, val_rfl);
   if (swr < g_swr_min) {
