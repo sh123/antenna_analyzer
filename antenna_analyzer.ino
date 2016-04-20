@@ -22,8 +22,8 @@
 #define FREQ_MAX           16000000000ULL
 #define BANDS_CNT          12
 
-#define TO_KHZ(freq)       (1000ULL * SI5351_FREQ_MULT * freq)
-#define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14860000000ULL && freq < 15000000000ULL))
+#define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
+#define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14810000000ULL && freq < 15000000000ULL))
 
 SimpleTimer g_timer;
 Si5351 g_generator;
@@ -138,17 +138,15 @@ void swr_list_sweep_and_fill() {
 
   uint64_t freq_hz = g_active_band.freq - g_active_band.freq_step * SWR_LIST_SIZE / 2;
 
+  double swr = SWR_MAX;
+    
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
-
-    double swr;
 
     if (VALID_RANGE(freq_hz)) {
       g_generator.set_freq(freq_hz, 0ULL, SI5351_CLK2);
       int val_fwd = analogRead(0);
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
-    } else {
-      swr = SWR_MAX;
     }
 
     if (swr < g_swr_min) {
