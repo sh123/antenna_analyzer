@@ -22,6 +22,9 @@
 #define FREQ_MAX           16000000000ULL
 #define BANDS_CNT          12
 
+#define TO_KHZ(freq)       (1000ULL * SI5351_FREQ_MULT * freq)
+#define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14860000000ULL && freq < 15000000000ULL))
+
 SimpleTimer g_timer;
 Si5351 g_generator;
 Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
@@ -139,19 +142,18 @@ void swr_list_sweep_and_fill() {
 
     double swr;
 
-    if (freq_hz >= FREQ_MAX || (freq_hz > 14860000000ULL && freq_hz < 15000000000ULL)) {
-      swr = SWR_MAX;
-    } else {
+    if (VALID_RANGE(freq_hz)) {
       g_generator.set_freq(freq_hz, 0ULL, SI5351_CLK2);
       int val_fwd = analogRead(0);
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
+    } else {
+      swr = SWR_MAX;
     }
-    long freq_khz = freq_hz / 1000ULL * SI5351_FREQ_MULT;
 
     if (swr < g_swr_min) {
       g_swr_min = swr;
-      g_freq_min = freq_khz;
+      g_freq_min = TO_KHZ(freq_hz);
     }
 
     int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
@@ -327,7 +329,7 @@ void process_display_swr() {
 
   int val_fwd = analogRead(0);
   int val_rfl = analogRead(1);
-  long freq_khz = g_active_band.freq / 1000ULL * SI5351_FREQ_MULT;
+  long freq_khz = TO_KHZ(g_active_band.freq);
 
   double swr = swr_calculate(val_fwd, val_rfl);
   if (swr < g_swr_min) {
