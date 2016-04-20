@@ -131,14 +131,14 @@ void swr_list_draw() {
   }
 }
 
-void swr_list_measure_and_fill_in_range() {
+void swr_list_sweep_and_fill() {
 
   uint64_t freq_hz = g_active_band.freq - g_active_band.freq_step * SWR_LIST_SIZE / 2;
 
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
 
     double swr;
-    
+
     if (freq_hz >= FREQ_MAX || (freq_hz > 14860000000ULL && freq_hz < 15000000000ULL)) {
       swr = SWR_MAX;
     } else {
@@ -148,7 +148,7 @@ void swr_list_measure_and_fill_in_range() {
       swr = swr_calculate(val_fwd, val_rfl);
     }
     long freq_khz = freq_hz / 100000ULL;
-    
+
     if (swr < g_swr_min) {
       g_swr_min = swr;
       g_freq_min = freq_khz;
@@ -157,7 +157,7 @@ void swr_list_measure_and_fill_in_range() {
     int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
     if (swr_graph > SWR_GRAPH_HEIGHT) {
       swr_graph = SWR_GRAPH_HEIGHT;
-    }  
+    }
     g_swr_list[i] = (unsigned char)swr_graph;
 
     freq_hz += g_active_band.freq_step;
@@ -192,7 +192,7 @@ void screen_select_next() {
 
     case S_GRAPH_MANUAL:
       g_screen_state = S_GRAPH_AUTOMATIC;
-      swr_list_measure_and_fill_in_range();
+      swr_list_sweep_and_fill();
       break;
 
     case S_GRAPH_AUTOMATIC:
@@ -362,8 +362,8 @@ void process_display_swr() {
 
     case S_GRAPH_AUTOMATIC:
       g_display.print(F("A "));
-      swr_list_measure_and_fill_in_range();
-      
+      swr_list_sweep_and_fill();
+
     case S_GRAPH_MANUAL:
 
       g_display.print(freq_khz);
