@@ -11,15 +11,15 @@ SWR from 160m band up to 2m. The limit is around 160MHz. Next peripherals are
 in use:
 
  * Nokia screen, PCD8544
- * Rotary controller
+ * Rotary encoder
  * Si5351 clock generator - https://www.adafruit.com/datasheets/Si5351.pdf
  * Reflectometer as per http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
  * You will also need low pass filters to get sine wave as si5351 is a clock generator
 
 Requirements:
 -------------
- * Rotary - https://github.com/sh123/Rotary/tree/rotary_button
+ * Rotary encoder library - https://github.com/sh123/Rotary/tree/rotary_button
  * Adafruit PCD8544 - https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
  * Adafruit GFX - https://github.com/adafruit/Adafruit-GFX-Library
  * Si5351 library (< 2.0.0 version) - https://github.com/etherkit/Si5351Arduino
- * Simple Timer - https://github.com/jfturcot/SimpleTimer
+ * Simple Timer library - https://github.com/jfturcot/SimpleTimer
