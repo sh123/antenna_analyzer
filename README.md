@@ -13,6 +13,7 @@ in use:
  * Nokia screen, PCD8544
  * Rotary controller
  * Si5351 clock generator - https://www.adafruit.com/datasheets/Si5351.pdf
+ * You will also need low pass filters to get sine wave as si5351 generates square wave
 
 Requirements:
 -------------
