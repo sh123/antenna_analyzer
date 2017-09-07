@@ -19,4 +19,5 @@ Requirements:
  * Rotary - https://github.com/sh123/Rotary/tree/rotary_button
  * Adafruit PCD8544 - https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
  * Adafruit GFX - https://github.com/adafruit/Adafruit-GFX-Library
- * Si5351 library - https://github.com/etherkit/Si5351Arduino
+ * Si5351 library (< 2.0.0 version) - https://github.com/etherkit/Si5351Arduino
+ * Simple Timer - https://github.com/jfturcot/SimpleTimer
