@@ -1,5 +1,9 @@
 # antenna_analyzer
-Arduino graphical/panoramic SWR 160 to 2m band antenna analyzer based on Si5351 module. Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
+Arduino graphical/panoramic SWR 160 to 2m band antenna analyzer based on Si5351 module. 
+
+Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
+
+Analyzer demonstrated quite valid results compared to factory built and calibrated devices.
 
 Arudino Antenna Analyzer
 ========================
