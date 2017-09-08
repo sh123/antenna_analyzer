@@ -17,7 +17,7 @@ in use:
  * Nokia screen, PCD8544
  * Rotary encoder
  * Si5351 clock generator - https://www.adafruit.com/datasheets/Si5351.pdf
- * Reflectometer as per http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
+ * Reflectometer/VSWR Bridge as per http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
  * You will also need a set of low pass filters to get sine wave at desired bands as SI5351 is a clock generator
 
 Requirements:
