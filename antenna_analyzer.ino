@@ -20,7 +20,7 @@
 #define FREQ_STEP_INC      2500000ULL
 #define FREQ_STEP_MAX      100000000ULL
 #define FREQ_MAX           16000000000ULL
-#define BANDS_CNT          12
+#define BANDS_CNT          14
 
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
 #define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14810000000ULL && freq < 15000000000ULL))
@@ -43,18 +43,20 @@ struct band_t {
   uint64_t freq_step;
   char *band_name;
 } const g_bands[BANDS_CNT] PROGMEM = {
+  { 180000000ULL,   1000000ULL,  "TOP"  },
   { 350000000ULL,   1000000ULL,  "80m"  },
-  { 700000000ULL,   1000000ULL,  "40m"  },
-  { 1010000000ULL,  1000000ULL,  "30m"  },
-  { 1400000000ULL,  1000000ULL,  "20m"  },
-  { 1800000000ULL,  1000000ULL,  "17m"  },
-  { 2100000000ULL,  1000000ULL,  "15m"  },
-  { 2480000000ULL,  1000000ULL,  "12m"  },
-  { 2700000000ULL,  2500000ULL,  "CB "  },
-  { 2800000000ULL,  2500000ULL,  "10m"  },
-  { 5000000000ULL,  5000000ULL,  "6m "  },
-  { 7000000000ULL,  5000000ULL,  "4m "  },
-  { 14400000000ULL, 5000000ULL,  "2m "  }
+  { 535000000ULL,   1000000ULL,  "60m"  },
+  { 710000000ULL,   1000000ULL,  "40m"  },
+  { 1011000000ULL,  1000000ULL,  "30m"  },
+  { 1410000000ULL,  1000000ULL,  "20m"  },
+  { 1810000000ULL,  1000000ULL,  "17m"  },
+  { 2107000000ULL,  1000000ULL,  "15m"  },
+  { 2490000000ULL,  1000000ULL,  "12m"  },
+  { 2700000000ULL,  2500000ULL,  "11m"  },
+  { 2810000000ULL,  2500000ULL,  "10m"  },
+  { 5010000000ULL,  5000000ULL,  "6m "  },
+  { 7010000000ULL,  5000000ULL,  "4m "  },
+  { 14500000000ULL, 5000000ULL,  "2m "  }
 };
 
 int g_active_band_index = 0;
