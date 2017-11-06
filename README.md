@@ -5,6 +5,9 @@ Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
 
 Analyzer demonstrated quite valid results compared to factory built and calibrated devices.
 
+Note, that it is not a complete VNA, based on resistive reflectometer and does not measure
+complex part of impedance.
+
 Arudino Antenna Analyzer
 ========================
 
