@@ -51,9 +51,9 @@ struct band_t {
   {   350000000ULL,  1000000ULL, "80m" },
   {   535000000ULL,  2000000ULL, "60m" },
   {   710000000ULL,  2000000ULL, "40m" },
-  {  1011000000ULL,  2000000ULL, "30m" },
-  {  1410000000ULL,  2000000ULL, "20m" },
-  {  1810000000ULL,  2000000ULL, "17m" },
+  {  1011000000ULL,  2500000ULL, "30m" },
+  {  1410000000ULL,  2500000ULL, "20m" },
+  {  1810000000ULL,  2500000ULL, "17m" },
   {  2107000000ULL,  2500000ULL, "15m" },
   {  2490000000ULL,  2500000ULL, "12m" },
   {  2700000000ULL,  5000000ULL, "11m" },
@@ -125,7 +125,7 @@ void swr_list_shift_left() {
 }
 
 void swr_list_store_center(double swr) {
-  int swr_graph = (swr - 1) * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
+  int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
   if (swr_graph > SWR_GRAPH_HEIGHT) {
     swr_graph = SWR_GRAPH_HEIGHT;
   }
@@ -137,6 +137,7 @@ void swr_list_draw() {
     if (g_swr_list[i] != 0) {
       g_display.drawFastVLine(i, SWR_SCREEN_HEIGHT - g_swr_list[i] + SWR_GRAPH_CROP, g_swr_list[i] - SWR_GRAPH_CROP, BLACK);
       process_rotary();
+      process_rotary_button();
     }
   }
 }
@@ -151,8 +152,12 @@ void swr_list_sweep_and_fill() {
 
     if (VALID_RANGE(freq_hz)) {
       g_generator.set_freq(freq_hz, SI5351_CLK2);
+
       delay(FREQ_DELAY_MS);
+      
       process_rotary();
+      process_rotary_button();
+      
       int val_fwd = analogRead(0);
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
@@ -163,7 +168,7 @@ void swr_list_sweep_and_fill() {
       g_freq_min = TO_KHZ(freq_hz);
     }
 
-    int swr_graph = (swr - 1) * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
+    int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
     if (swr_graph > SWR_GRAPH_HEIGHT) {
       swr_graph = SWR_GRAPH_HEIGHT;
     }
