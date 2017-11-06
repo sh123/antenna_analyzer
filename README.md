@@ -5,7 +5,7 @@ Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
 
 Analyzer demonstrated quite valid results compared to factory built and calibrated devices.
 
-Note, that it is not a complete VNA, based on resistive reflectometer and does not measure
+Note, that it is not a complete VNA, it is based on resistive reflectometer and does not measure
 complex part of impedance.
 
 Arudino Antenna Analyzer
@@ -14,7 +14,7 @@ Arudino Antenna Analyzer
 Introduction
 ------------
 Arudino based antenna swr analyzer / plotter can be used to measure antenna
-SWR from 160m band up to 2m. The limit is around 160MHz. Next peripherals are
+SWR from 160m band up to 1.25m. The limit is 225MHz. Next peripherals are
 in use:
 
  * Nokia screen, PCD8544
