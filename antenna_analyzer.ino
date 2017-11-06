@@ -10,6 +10,8 @@
 #include <SimpleTimer.h>
 #include "Wire.h"
 
+#define XTAL_CUSTOM_FREQ   27000000
+
 #define SWR_MAX            99
 #define SWR_LIST_SIZE      84
 #define SWR_SCREEN_HEIGHT  48
@@ -19,7 +21,7 @@
 
 #define FREQ_STEP_INC      2500000ULL
 #define FREQ_STEP_MAX      100000000ULL
-#define FREQ_MAX           16000000000ULL
+#define FREQ_MAX           20000000000ULL
 #define BANDS_CNT          14
 
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
@@ -43,20 +45,20 @@ struct band_t {
   uint64_t freq_step;
   char *band_name;
 } const g_bands[BANDS_CNT] PROGMEM = {
-  { 180000000ULL,   1000000ULL,  "TOP"  },
-  { 350000000ULL,   1000000ULL,  "80m"  },
-  { 535000000ULL,   1000000ULL,  "60m"  },
-  { 710000000ULL,   1000000ULL,  "40m"  },
-  { 1011000000ULL,  1000000ULL,  "30m"  },
-  { 1410000000ULL,  1000000ULL,  "20m"  },
-  { 1810000000ULL,  1000000ULL,  "17m"  },
-  { 2107000000ULL,  1000000ULL,  "15m"  },
-  { 2490000000ULL,  1000000ULL,  "12m"  },
-  { 2700000000ULL,  2500000ULL,  "11m"  },
-  { 2810000000ULL,  2500000ULL,  "10m"  },
-  { 5010000000ULL,  5000000ULL,  "6m "  },
-  { 7010000000ULL,  5000000ULL,  "4m "  },
-  { 14500000000ULL, 5000000ULL,  "2m "  }
+  {   180000000ULL,  1000000ULL, "TOP" },
+  {   350000000ULL,  1000000ULL, "80m" },
+  {   535000000ULL,  2000000ULL, "60m" },
+  {   710000000ULL,  2000000ULL, "40m" },
+  {  1011000000ULL,  2000000ULL, "30m" },
+  {  1410000000ULL,  2000000ULL, "20m" },
+  {  1810000000ULL,  2000000ULL, "17m" },
+  {  2107000000ULL,  2500000ULL, "15m" },
+  {  2490000000ULL,  2500000ULL, "12m" },
+  {  2700000000ULL,  5000000ULL, "11m" },
+  {  2810000000ULL,  5000000ULL, "10m" },
+  {  5010000000ULL, 10000000ULL, "6m " },
+  {  7010000000ULL, 10000000ULL, "4m " },
+  { 14500000000ULL, 15000000ULL, "2m " }
 };
 
 int g_active_band_index = 0;
@@ -82,9 +84,9 @@ void setup()
   swr_list_clear(); 
   band_select(g_active_band_index);
 
-  g_generator.init(SI5351_CRYSTAL_LOAD_6PF, 0);
+  g_generator.init(SI5351_CRYSTAL_LOAD_8PF, XTAL_CUSTOM_FREQ, 0);
   g_generator.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
-  g_generator.set_freq(g_active_band.freq, 0UL, SI5351_CLK2);
+  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 
   g_timer.setInterval(1000, process_display_swr);
   g_timer.setInterval(100, process_rotary_button);
@@ -93,7 +95,7 @@ void setup()
   g_display.begin();
   g_display.setContrast(60);
   g_display.display();
-  delay(1000);
+  delay(500);
   g_display.clearDisplay();
   g_display.display();
 }
@@ -145,7 +147,7 @@ void swr_list_sweep_and_fill() {
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
 
     if (VALID_RANGE(freq_hz)) {
-      g_generator.set_freq(freq_hz, 0ULL, SI5351_CLK2);
+      g_generator.set_freq(freq_hz, SI5351_CLK2);
       int val_fwd = analogRead(0);
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
@@ -165,7 +167,7 @@ void swr_list_sweep_and_fill() {
     freq_hz += g_active_band.freq_step;
   }
 
-  g_generator.set_freq(g_active_band.freq, 0ULL, SI5351_CLK2);
+  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 }
 
 /* --------------------------------------------------------------------------*/
@@ -216,7 +218,7 @@ void band_select_next() {
     g_active_band_index = 0;
   }
   band_select(g_active_band_index);
-  g_generator.set_freq(g_active_band.freq, 0ULL, SI5351_CLK2);
+  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 }
 
 void band_select(int index) {
@@ -269,7 +271,7 @@ void process_rotary() {
         if (g_active_band.freq > FREQ_MAX) {
             g_active_band.freq = FREQ_MAX;
         }
-        g_generator.set_freq(g_active_band.freq, 0ULL, SI5351_CLK2);
+        g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 
         if (rotary_state == DIR_CW) {
           swr_list_shift_right();

@@ -25,7 +25,7 @@ Requirements:
  * Rotary encoder library modified fork - https://github.com/sh123/Rotary/tree/rotary_button
  * Adafruit PCD8544 - https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
  * Adafruit GFX - https://github.com/adafruit/Adafruit-GFX-Library
- * Si5351 library (< 2.0.0 version, just pick from Arduino library manager) - https://github.com/etherkit/Si5351Arduino
+ * Etherkit Si5351 library 2+ (just pick from Arduino library manager) - https://github.com/etherkit/Si5351Arduino
  * Simple Timer library - https://github.com/jfturcot/SimpleTimer
 
 Supported operations:
