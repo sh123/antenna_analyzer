@@ -17,11 +17,13 @@
 #define SWR_SCREEN_HEIGHT  48
 #define SWR_SCREEN_CHAR    8
 #define SWR_GRAPH_HEIGHT   (SWR_SCREEN_HEIGHT - SWR_SCREEN_CHAR)
-#define SWR_GRAPH_CROP     5
+#define SWR_GRAPH_CROP     6
 
 #define FREQ_STEP_INC      2500000ULL
 #define FREQ_STEP_MAX      100000000ULL
 #define FREQ_MAX           20000000000ULL
+#define FREQ_DELAY_MS      5
+
 #define BANDS_CNT          14
 
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
@@ -58,7 +60,7 @@ struct band_t {
   {  2810000000ULL,  5000000ULL, "10m" },
   {  5010000000ULL, 10000000ULL, "6m " },
   {  7010000000ULL, 10000000ULL, "4m " },
-  { 14500000000ULL, 15000000ULL, "2m " }
+  { 14500000000ULL, 25000000ULL, "2m " }
 };
 
 int g_active_band_index = 0;
@@ -88,7 +90,7 @@ void setup()
   g_generator.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
   g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 
-  g_timer.setInterval(1000, process_display_swr);
+  g_timer.setInterval(500, process_display_swr);
   g_timer.setInterval(100, process_rotary_button);
   g_timer.setInterval(10, process_rotary);
 
@@ -123,7 +125,7 @@ void swr_list_shift_left() {
 }
 
 void swr_list_store_center(double swr) {
-  int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
+  int swr_graph = (swr - 1) * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
   if (swr_graph > SWR_GRAPH_HEIGHT) {
     swr_graph = SWR_GRAPH_HEIGHT;
   }
@@ -134,6 +136,7 @@ void swr_list_draw() {
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
     if (g_swr_list[i] != 0) {
       g_display.drawFastVLine(i, SWR_SCREEN_HEIGHT - g_swr_list[i] + SWR_GRAPH_CROP, g_swr_list[i] - SWR_GRAPH_CROP, BLACK);
+      process_rotary();
     }
   }
 }
@@ -148,6 +151,8 @@ void swr_list_sweep_and_fill() {
 
     if (VALID_RANGE(freq_hz)) {
       g_generator.set_freq(freq_hz, SI5351_CLK2);
+      delay(FREQ_DELAY_MS);
+      process_rotary();
       int val_fwd = analogRead(0);
       int val_rfl = analogRead(1);
       swr = swr_calculate(val_fwd, val_rfl);
@@ -158,7 +163,7 @@ void swr_list_sweep_and_fill() {
       g_freq_min = TO_KHZ(freq_hz);
     }
 
-    int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
+    int swr_graph = (swr - 1) * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
     if (swr_graph > SWR_GRAPH_HEIGHT) {
       swr_graph = SWR_GRAPH_HEIGHT;
     }
@@ -272,6 +277,7 @@ void process_rotary() {
             g_active_band.freq = FREQ_MAX;
         }
         g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
+        delay(FREQ_DELAY_MS);
 
         if (rotary_state == DIR_CW) {
           swr_list_shift_right();
