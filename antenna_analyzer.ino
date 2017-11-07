@@ -13,6 +13,8 @@
 // 25 / 27 MHz crystals
 #define XTAL_CUSTOM_FREQ   27000000
 
+#define BANDS_CNT          14
+
 // analog read pins
 #define PIN_SWR_FWD        0
 #define PIN_SWR_RFL        1
@@ -32,14 +34,12 @@
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
 #define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14810000000ULL && freq < 15000000000ULL))
 
-enum SCREEN_STATE {
+enum MAIN_SCREEN_STATE {
   S_MAIN_SCREEN = 0,
   S_GRAPH_MANUAL,
   S_GRAPH_AUTOMATIC,
   S_CHANGE_STEP
 };
-
-#define BANDS_CNT          14
 
 struct band_map_t {
   uint64_t freq;
@@ -62,7 +62,7 @@ struct band_map_t {
   { 14500000000ULL, 25000000ULL, "2m " }
 };
 
-// current band
+// band state
 int g_active_band_index = 0;
 struct band_map_t g_active_band;
 
@@ -71,9 +71,9 @@ long g_freq_min;
 double g_swr_min;
 unsigned char g_swr_list[SWR_LIST_SIZE];
 
-// program state
-SCREEN_STATE g_screen_state = S_MAIN_SCREEN;
+// UI state
 bool g_do_update = true;
+MAIN_SCREEN_STATE g_screen_state = S_MAIN_SCREEN;
 
 // peripherals
 Si5351 g_generator;
@@ -376,7 +376,6 @@ void process_rotary_button()
           band_select_next(); 
           g_do_update = true;
           break;
-          
       } // screen state
       break;
 
