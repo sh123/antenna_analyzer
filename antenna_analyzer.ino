@@ -366,8 +366,18 @@ void process_rotary_button()
   switch (rotary_btn_state) {
 
     case BTN_RELEASED:
-      band_select_next();
-      g_do_update = true;
+    
+      switch (g_screen_state) {
+        
+        case S_CHANGE_STEP:
+          break;
+          
+        default:
+          band_select_next(); 
+          g_do_update = true;
+          break;
+          
+      } // screen state
       break;
 
     case BTN_PRESSED_LONG:
