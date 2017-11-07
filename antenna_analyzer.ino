@@ -30,8 +30,6 @@
 #define FREQ_MAX           20000000000ULL
 #define FREQ_DELAY_MS      5
 
-#define BANDS_CNT          14
-
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
 #define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14810000000ULL && freq < 15000000000ULL))
 
@@ -42,8 +40,9 @@ enum SCREEN_STATE {
   S_CHANGE_STEP
 };
 
-// band map
-struct band_t {
+#define BANDS_CNT          14
+
+struct band_map_t {
   uint64_t freq;
   uint64_t freq_step;
   char *band_name;
@@ -66,7 +65,7 @@ struct band_t {
 
 // current band
 int g_active_band_index = 0;
-struct band_t g_active_band;
+struct band_map_t g_active_band;
 
 // swr state
 long g_freq_min;
@@ -353,7 +352,8 @@ void process_rotary()
     }
 
     g_do_update = true;
-  }
+    
+  } // screen state
 }
 
 void process_rotary_button() 
@@ -380,16 +380,14 @@ void process_rotary_button()
 
 void process_display_swr() 
 {
+  long freq_khz = TO_KHZ(g_active_band.freq);
+    
   int val_fwd = analogRead(PIN_SWR_FWD);
   int val_rfl = analogRead(PIN_SWR_RFL);
-
   double swr = swr_calculate(val_fwd, val_rfl);
 
-  long freq_khz = TO_KHZ(g_active_band.freq);
-
-  swr_update_minimum_swr(swr, freq_khz);
-  
   swr_list_store_center(swr);
+  swr_update_minimum_swr(swr, freq_khz);
 
   g_display.clearDisplay();
   g_display.setTextSize(1);
@@ -444,6 +442,8 @@ void process_display_swr()
   g_display.display();
 }
 
+/* --------------------------------------------------------------------------*/
+
 void loop()
 {
   g_timer.run();
@@ -454,3 +454,5 @@ void loop()
     g_do_update = false;
   }
 }
+
+/* --------------------------------------------------------------------------*/
