@@ -351,11 +351,12 @@ void process_rotary()
       case S_CHANGE_STEP:
         band_rotate_step(dir);
         break;
-    }
+        
+    } // screen state
 
     g_do_update = true;
     
-  } // screen state
+  } // rotary changed
 }
 
 void process_rotary_button() 
