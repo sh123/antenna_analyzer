@@ -38,7 +38,7 @@ enum MAIN_SCREEN_STATE {
   S_MAIN_SCREEN = 0,
   S_GRAPH_MANUAL,
   S_GRAPH_AUTOMATIC,
-  S_CHANGE_STEP
+  S_SETTINGS
 };
 
 struct band_map_t {
@@ -319,10 +319,10 @@ void screen_select_next()
       break;
 
     case S_GRAPH_AUTOMATIC:
-      g_screen_state = S_CHANGE_STEP;
+      g_screen_state = S_SETTINGS;
       break;
 
-    case S_CHANGE_STEP:
+    case S_SETTINGS:
       g_screen_state = S_MAIN_SCREEN;
       break;
 
@@ -357,7 +357,7 @@ void process_rotary()
           swr_list_shift_left();
         break;
 
-      case S_CHANGE_STEP:
+      case S_SETTINGS:
         band_rotate_step(dir);
         break;
         
@@ -378,7 +378,7 @@ void process_rotary_button()
     
       switch (g_screen_state) {
         
-        case S_CHANGE_STEP:
+        case S_SETTINGS:
           break;
           
         default:
@@ -451,7 +451,7 @@ void process_display_swr()
 
       break;
 
-    case S_CHANGE_STEP:
+    case S_SETTINGS:
 
       g_display.print(F("STEP: ")); 
       g_display.print((long)(g_active_band.freq_step/100000UL));
