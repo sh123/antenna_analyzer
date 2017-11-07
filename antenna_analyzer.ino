@@ -87,12 +87,10 @@ void setup()
 {
   Serial.begin(9600);
   
+  generator_initialize();
+    
   swr_list_clear(); 
   band_select(g_active_band_index);
-
-  g_generator.init(SI5351_CRYSTAL_LOAD_8PF, XTAL_CUSTOM_FREQ, 0);
-  g_generator.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
-  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 
   g_timer.setInterval(500, process_display_swr);
   g_timer.setInterval(100, process_rotary_button);
@@ -105,6 +103,20 @@ void setup()
   
   g_display.clearDisplay();
   g_display.display();
+}
+
+/* --------------------------------------------------------------------------*/
+
+void generator_initialize()
+{
+  g_generator.init(SI5351_CRYSTAL_LOAD_8PF, XTAL_CUSTOM_FREQ, 0);
+  g_generator.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
+}
+
+void generator_set_frequency(uint64_t freq)
+{  
+  g_generator.set_freq(freq, SI5351_CLK2);
+  delay(FREQ_DELAY_MS);
 }
 
 /* --------------------------------------------------------------------------*/
@@ -162,9 +174,7 @@ void swr_list_sweep_and_fill()
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
 
     if (VALID_RANGE(freq_hz)) {
-      g_generator.set_freq(freq_hz, SI5351_CLK2);
-
-      delay(FREQ_DELAY_MS);
+      generator_set_frequency(freq_hz);
       
       process_rotary();
       process_rotary_button();
@@ -176,9 +186,10 @@ void swr_list_sweep_and_fill()
     g_swr_list[i] = (unsigned char)swr_screen_normalize(swr);
     
     freq_hz += g_active_band.freq_step;
-  }
+    
+  } // over swr list
 
-  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
+  generator_set_frequency(g_active_band.freq);
 }
 
 void swr_list_grid_draw() 
@@ -252,8 +263,6 @@ void band_select_next()
   }
   
   band_select(g_active_band_index);
-  
-  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 }
 
 void band_select(int index) 
@@ -266,6 +275,8 @@ void band_select(int index)
     
     g_swr_min = SWR_MAX;
     g_freq_min = g_active_band.freq / 100000ULL;
+
+    generator_set_frequency(g_active_band.freq);
   }
 }
 
@@ -276,6 +287,8 @@ void band_rotate_frequency(int dir)
   if (g_active_band.freq > FREQ_MAX) {
     g_active_band.freq = FREQ_MAX;
   }
+  
+  generator_set_frequency(g_active_band.freq);
 }
 
 void band_rotate_step(int dir)
@@ -338,10 +351,6 @@ void process_rotary()
       case S_MAIN_SCREEN:
       case S_GRAPH_MANUAL:
         band_rotate_frequency(dir);
-        
-        g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
-        delay(FREQ_DELAY_MS);
-        
         if (rotary_state == DIR_CW) 
           swr_list_shift_right();
         else 
@@ -376,6 +385,7 @@ void process_rotary_button()
           band_select_next(); 
           g_do_update = true;
           break;
+          
       } // screen state
       break;
 
