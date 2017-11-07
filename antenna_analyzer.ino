@@ -3,7 +3,6 @@
  *    generator and pcd8544 Nokia 5110 display
  *
  **/
-#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
 #include <si5351.h>
@@ -77,10 +76,10 @@ SCREEN_STATE g_screen_state = S_MAIN_SCREEN;
 bool g_do_update = true;
 
 // peripherals
-SimpleTimer g_timer;
 Si5351 g_generator;
-Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+SimpleTimer g_timer;
 Rotary g_rotary = Rotary(11, 12, 13);
+Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
 
 /* --------------------------------------------------------------------------*/
 
@@ -284,7 +283,10 @@ void band_rotate_step(int dir)
   g_active_band.freq_step += dir * FREQ_STEP_INC;
 
   if (g_active_band.freq_step > FREQ_STEP_MAX) { 
-    g_active_band.freq_step = FREQ_STEP_INC;
+    if (dir < 0)
+      g_active_band.freq_step = 0;
+    if (dir > 0)
+      g_active_band.freq_step = FREQ_STEP_MAX;
   }
 }
 
