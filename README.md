@@ -1,5 +1,5 @@
 # antenna_analyzer
-Arduino graphical/panoramic SWR 160 to 2m band antenna analyzer based on Si5351 module. 
+Arduino graphical/panoramic SWR 160 to 1.25m band antenna analyzer based on Si5351 module. 
 
 Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
 
@@ -26,10 +26,10 @@ in use:
 Requirements:
 -------------
  * Rotary encoder library modified fork - https://github.com/sh123/Rotary/tree/rotary_button
- * Adafruit PCD8544 - https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
- * Adafruit GFX - https://github.com/adafruit/Adafruit-GFX-Library
- * Etherkit Si5351 library 2+ (just pick from Arduino library manager) - https://github.com/etherkit/Si5351Arduino
  * Simple Timer library - https://github.com/jfturcot/SimpleTimer
+ * Adafruit PCD8544 (from Arduino library)- https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library
+ * Adafruit GFX (from Arudino library) - https://github.com/adafruit/Adafruit-GFX-Library
+ * Etherkit Si5351 (2+ from Arduino library) - https://github.com/etherkit/Si5351Arduino
 
 Supported operations:
 ---------------------

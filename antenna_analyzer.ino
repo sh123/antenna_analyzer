@@ -1,5 +1,6 @@
 /**
- *  Antenna analyzer based on si5341 and pcd8544 display
+ *  Panoramic antenna analyzer based on si5341 clock 
+ *    generator and pcd8544 Nokia 5110 display
  *
  **/
 #include <SPI.h>
@@ -10,9 +11,14 @@
 #include <SimpleTimer.h>
 #include "Wire.h"
 
+// 25 / 27 MHz crystals
 #define XTAL_CUSTOM_FREQ   27000000
 
-#define SWR_MAX            99
+// analog read pins
+#define PIN_SWR_FWD        0
+#define PIN_SWR_RFL        1
+
+#define SWR_MAX            32
 #define SWR_LIST_SIZE      84
 #define SWR_SCREEN_HEIGHT  48
 #define SWR_SCREEN_CHAR    8
@@ -29,11 +35,6 @@
 #define TO_KHZ(freq)       (freq / (1000ULL * SI5351_FREQ_MULT))
 #define VALID_RANGE(freq)  (freq < FREQ_MAX && !(freq > 14810000000ULL && freq < 15000000000ULL))
 
-SimpleTimer g_timer;
-Si5351 g_generator;
-Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
-Rotary g_rotary = Rotary(11, 12, 13);
-
 enum SCREEN_STATE {
   S_MAIN_SCREEN = 0,
   S_GRAPH_MANUAL,
@@ -41,7 +42,7 @@ enum SCREEN_STATE {
   S_CHANGE_STEP
 };
 
-// band selection
+// band map
 struct band_t {
   uint64_t freq;
   uint64_t freq_step;
@@ -63,26 +64,31 @@ struct band_t {
   { 14500000000ULL, 25000000ULL, "2m " }
 };
 
+// current band
 int g_active_band_index = 0;
 struct band_t g_active_band;
 
+// swr state
 long g_freq_min;
 double g_swr_min;
-
-// swr graph
 unsigned char g_swr_list[SWR_LIST_SIZE];
 
 // program state
-SCREEN_STATE g_screen_state;
+SCREEN_STATE g_screen_state = S_MAIN_SCREEN;
 bool g_do_update = true;
+
+// peripherals
+SimpleTimer g_timer;
+Si5351 g_generator;
+Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+Rotary g_rotary = Rotary(11, 12, 13);
 
 /* --------------------------------------------------------------------------*/
 
 void setup()
 {
   Serial.begin(9600);
-
-  g_screen_state = S_MAIN_SCREEN;
+  
   swr_list_clear(); 
   band_select(g_active_band_index);
 
@@ -98,52 +104,59 @@ void setup()
   g_display.setContrast(60);
   g_display.display();
   delay(500);
+  
   g_display.clearDisplay();
   g_display.display();
 }
 
 /* --------------------------------------------------------------------------*/
 
-void swr_list_clear() {
+void swr_list_clear() 
+{
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
     g_swr_list[i] = 0;
   }
 }
 
-void swr_list_shift_right() {
+void swr_list_shift_right() 
+{
   g_swr_list[0] = 0;
+  
   for (int i = SWR_LIST_SIZE - 1; i != 0; i--) {
     g_swr_list[i + 1] = g_swr_list[i];
   }
 }
 
-void swr_list_shift_left() {
+void swr_list_shift_left() 
+{
   g_swr_list[SWR_LIST_SIZE - 1] = 0;
+  
   for (int i = 0; i < SWR_LIST_SIZE - 1; i++) {
     g_swr_list[i] = g_swr_list[i + 1];
   }
 }
 
-void swr_list_store_center(double swr) {
-  int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
-  if (swr_graph > SWR_GRAPH_HEIGHT) {
-    swr_graph = SWR_GRAPH_HEIGHT;
-  }
-  g_swr_list[SWR_LIST_SIZE / 2] = (unsigned char)swr_graph;
+void swr_list_store_center(double swr) 
+{
+  g_swr_list[SWR_LIST_SIZE / 2] = (unsigned char)swr_screen_normalize(swr);
 }
 
-void swr_list_draw() {
+void swr_list_draw() 
+{  
   for (int i = 0; i < SWR_LIST_SIZE; i++) {
+    
     if (g_swr_list[i] != 0) {
+      
       g_display.drawFastVLine(i, SWR_SCREEN_HEIGHT - g_swr_list[i] + SWR_GRAPH_CROP, g_swr_list[i] - SWR_GRAPH_CROP, BLACK);
+      
       process_rotary();
       process_rotary_button();
     }
-  }
+  } // i
 }
 
-void swr_list_sweep_and_fill() {
-
+void swr_list_sweep_and_fill() 
+{
   uint64_t freq_hz = g_active_band.freq - g_active_band.freq_step * SWR_LIST_SIZE / 2;
 
   double swr = SWR_MAX;
@@ -157,47 +170,129 @@ void swr_list_sweep_and_fill() {
       
       process_rotary();
       process_rotary_button();
-      
-      int val_fwd = analogRead(0);
-      int val_rfl = analogRead(1);
-      swr = swr_calculate(val_fwd, val_rfl);
-    }
 
-    if (swr < g_swr_min) {
-      g_swr_min = swr;
-      g_freq_min = TO_KHZ(freq_hz);
+      swr = swr_read();
+      swr_update_minimum_swr(swr, TO_KHZ(freq_hz));
     }
-
-    int swr_graph = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
-    if (swr_graph > SWR_GRAPH_HEIGHT) {
-      swr_graph = SWR_GRAPH_HEIGHT;
-    }
-    g_swr_list[i] = (unsigned char)swr_graph;
-
+    
+    g_swr_list[i] = (unsigned char)swr_screen_normalize(swr);
+    
     freq_hz += g_active_band.freq_step;
   }
 
   g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
 }
 
-/* --------------------------------------------------------------------------*/
-
-void grid_draw() {
-
+void swr_list_grid_draw() 
+{
   g_display.drawFastVLine(SWR_LIST_SIZE / 2, SWR_SCREEN_CHAR, SWR_SCREEN_CHAR / 2, BLACK);
 
   for (unsigned char x = 0; x <= SWR_LIST_SIZE; x += SWR_LIST_SIZE / 12) {
-
+    
     for (unsigned char y = SWR_SCREEN_CHAR; y <= SWR_GRAPH_HEIGHT + SWR_GRAPH_CROP; y += SWR_GRAPH_HEIGHT / SWR_GRAPH_CROP) {
 
       g_display.drawPixel(x + 6, y + SWR_SCREEN_CHAR - 1, BLACK);
 
     } // y
-
+    
   } // x
 }
 
-void screen_select_next() {
+unsigned int swr_screen_normalize(double swr)
+{  
+  unsigned int swr_norm = swr * (double)SWR_GRAPH_HEIGHT / (double)SWR_GRAPH_CROP;
+  
+  if (swr_norm > SWR_GRAPH_HEIGHT) {
+    swr_norm = SWR_GRAPH_HEIGHT;
+  }
+  return swr_norm;
+}
+
+void swr_update_minimum_swr(double swr, long freq_khz)
+{
+  if (swr < g_swr_min) {
+    g_swr_min = swr;
+    g_freq_min = freq_khz;
+  }
+}
+
+double swr_read()
+{
+  int val_fwd = analogRead(PIN_SWR_FWD);
+  int val_rfl = analogRead(PIN_SWR_RFL);
+  return swr_calculate(val_fwd, val_rfl);
+}
+
+double swr_calculate(int fwd, int rfl) 
+{
+  int val_fwd = fwd;
+  int val_rfl = rfl;
+  
+  if (val_rfl > val_fwd) {
+    val_rfl = val_fwd;
+  }
+  
+  // NOTE, no imaginary reactive part
+  double gamma = (double)val_rfl / (double)val_fwd;
+  
+  double swr = (1 + gamma) / (1 - gamma);
+  
+  if (swr > SWR_MAX || isnan(swr)) {
+    swr = SWR_MAX;
+  }
+  return swr;
+}
+
+/* --------------------------------------------------------------------------*/
+
+void band_select_next() 
+{
+  g_active_band_index += 1;
+  
+  if (g_active_band_index >= BANDS_CNT) {
+    g_active_band_index = 0;
+  }
+  
+  band_select(g_active_band_index);
+  
+  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
+}
+
+void band_select(int index) 
+{
+  if (index < BANDS_CNT) {
+    
+    memcpy_PF((void*)&g_active_band, (uint_farptr_t)&g_bands[index], sizeof(g_bands[index]));
+    
+    swr_list_clear();
+    
+    g_swr_min = SWR_MAX;
+    g_freq_min = g_active_band.freq / 100000ULL;
+  }
+}
+
+void band_rotate_frequency(int dir)
+{
+  g_active_band.freq += dir * g_active_band.freq_step;
+
+  if (g_active_band.freq > FREQ_MAX) {
+    g_active_band.freq = FREQ_MAX;
+  }
+}
+
+void band_rotate_step(int dir)
+{
+  g_active_band.freq_step += dir * FREQ_STEP_INC;
+
+  if (g_active_band.freq_step > FREQ_STEP_MAX) { 
+    g_active_band.freq_step = FREQ_STEP_INC;
+  }
+}
+
+/* --------------------------------------------------------------------------*/
+
+void screen_select_next() 
+{
   switch (g_screen_state) {
 
     case S_MAIN_SCREEN:
@@ -219,45 +314,16 @@ void screen_select_next() {
 
      default:
        break;
-  }
-}
-
-void band_select_next() {
-  g_active_band_index += 1;
-  if (g_active_band_index >= BANDS_CNT) {
-    g_active_band_index = 0;
-  }
-  band_select(g_active_band_index);
-  g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
-}
-
-void band_select(int index) {
-  if (index < BANDS_CNT) {
-    memcpy_PF((void*)&g_active_band, (uint_farptr_t)&g_bands[index], sizeof(g_bands[index]));
-    swr_list_clear();
-    g_swr_min = SWR_MAX;
-    g_freq_min = g_active_band.freq / 100000ULL;
-  }
-}
-
-double swr_calculate(int fwd, int rfl) {
-  int val_fwd = fwd;
-  int val_rfl = rfl;
-  if (val_rfl > val_fwd) {
-    val_rfl = val_fwd;
-  }
-  double gamma = (double)val_rfl / (double)val_fwd;
-  double swr = (1 + gamma) / (1 - gamma);
-  if (swr > SWR_MAX || isnan(swr)) {
-    swr = SWR_MAX;
-  }
-  return swr;
+       
+  } // current screen state
 }
 
 /* --------------------------------------------------------------------------*/
 
-void process_rotary() {
+void process_rotary() 
+{
   unsigned char rotary_state = g_rotary.process();
+  
   if (rotary_state) {
 
     int dir = (rotary_state == DIR_CW) ? -1 : 1;
@@ -265,38 +331,24 @@ void process_rotary() {
     switch (g_screen_state) {
 
       case S_GRAPH_AUTOMATIC:
-
-        g_active_band.freq += dir * g_active_band.freq_step;
-
-        if (g_active_band.freq > FREQ_MAX) {
-            g_active_band.freq = FREQ_MAX;
-        }
+        band_rotate_frequency(dir);
         break;
 
       case S_MAIN_SCREEN:
       case S_GRAPH_MANUAL:
-
-        g_active_band.freq += dir * g_active_band.freq_step;
-
-        if (g_active_band.freq > FREQ_MAX) {
-            g_active_band.freq = FREQ_MAX;
-        }
+        band_rotate_frequency(dir);
+        
         g_generator.set_freq(g_active_band.freq, SI5351_CLK2);
         delay(FREQ_DELAY_MS);
-
-        if (rotary_state == DIR_CW) {
+        
+        if (rotary_state == DIR_CW) 
           swr_list_shift_right();
-        } else {
+        else 
           swr_list_shift_left();
-        }
         break;
 
       case S_CHANGE_STEP:
-        // change step
-        g_active_band.freq_step += dir * FREQ_STEP_INC;
-        if (g_active_band.freq_step > FREQ_STEP_MAX) { 
-          g_active_band.freq_step = FREQ_STEP_INC;
-        }
+        band_rotate_step(dir);
         break;
     }
 
@@ -304,51 +356,39 @@ void process_rotary() {
   }
 }
 
-void process_rotary_button() {
-
+void process_rotary_button() 
+{
   unsigned char rotary_btn_state = g_rotary.process_button();
 
   switch (rotary_btn_state) {
 
-    case BTN_NONE:
-      break;
-
-    case BTN_PRESSED:
-      Serial.println("button pressed");
-      break;
-
     case BTN_RELEASED:
-      Serial.println("button released");
       band_select_next();
       g_do_update = true;
       break;
 
     case BTN_PRESSED_LONG:
-      Serial.println("button long pressed");
       screen_select_next();
       g_do_update = true;
       break;
 
-    case BTN_RELEASED_LONG:
-      Serial.println("button long released");
-      break;
-
     default:
       break;
-  }
+      
+  } // button state
 }
 
-void process_display_swr() {
-
-  int val_fwd = analogRead(0);
-  int val_rfl = analogRead(1);
-  long freq_khz = TO_KHZ(g_active_band.freq);
+void process_display_swr() 
+{
+  int val_fwd = analogRead(PIN_SWR_FWD);
+  int val_rfl = analogRead(PIN_SWR_RFL);
 
   double swr = swr_calculate(val_fwd, val_rfl);
-  if (swr < g_swr_min) {
-    g_swr_min = swr;
-    g_freq_min = freq_khz;
-  }
+
+  long freq_khz = TO_KHZ(g_active_band.freq);
+
+  swr_update_minimum_swr(swr, freq_khz);
+  
   swr_list_store_center(swr);
 
   g_display.clearDisplay();
@@ -376,6 +416,7 @@ void process_display_swr() {
       break;
 
     case S_GRAPH_AUTOMATIC:
+    
       g_display.print(F("A "));
       swr_list_sweep_and_fill();
 
@@ -385,7 +426,7 @@ void process_display_swr() {
       g_display.print(F(" "));
       g_display.println(swr);
 
-      grid_draw();
+      swr_list_grid_draw();
       swr_list_draw();
 
       break;
@@ -406,7 +447,9 @@ void process_display_swr() {
 void loop()
 {
   g_timer.run();
+  
   if (g_do_update) {
+    
     process_display_swr();
     g_do_update = false;
   }
