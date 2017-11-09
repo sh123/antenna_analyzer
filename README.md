@@ -3,6 +3,8 @@ Arduino graphical/panoramic SWR 160 to 1.25m band antenna analyzer based on Si53
 
 Influenced by http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
 
+Output power from si5351 is around 10dBm (10mW).
+
 Analyzer demonstrated quite valid results compared to factory built and calibrated devices.
 
 Note, that it is not a complete VNA, it is based on resistive reflectometer and does not measure
