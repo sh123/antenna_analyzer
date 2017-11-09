@@ -102,13 +102,15 @@ void setup()
   Serial.begin(9600);
   
   generator_initialize();
-    
+
   swr_list_clear(); 
   band_select(g_active_band_index);
 
   g_timer.setInterval(500, process_display_swr);
   g_timer.setInterval(100, process_rotary_button);
+  //attachInterrupt(digitalPinToInterrupt(PIN_ROTARY_BTN), process_rotary_button, CHANGE);
   g_timer.setInterval(10, process_rotary);
+  //attachInterrupt(digitalPinToInterrupt(PIN_ROTARY_CLK), process_rotary, CHANGE);
 
   g_display.begin();
   g_display.setContrast(60);
