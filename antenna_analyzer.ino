@@ -19,6 +19,18 @@
 #define PIN_SWR_FWD        0
 #define PIN_SWR_RFL        1
 
+// rotary encoder pins
+#define PIN_ROTARY_CLK     11
+#define PIN_ROTARY_DATA    12
+#define PIN_ROTARY_BTN     13
+
+// screen pins
+#define PIN_PCD_CLK        7
+#define PIN_PCD_DIN        6
+#define PIN_PCD_DC         5
+#define PIN_PCD_CS         4
+#define PIN_PCD_RST        3
+
 #define SWR_MAX            32
 #define SWR_LIST_SIZE      84
 #define SWR_SCREEN_HEIGHT  48
@@ -78,8 +90,10 @@ MAIN_SCREEN_STATE g_screen_state = S_MAIN_SCREEN;
 // peripherals
 Si5351 g_generator;
 SimpleTimer g_timer;
-Rotary g_rotary = Rotary(11, 12, 13);
-Adafruit_PCD8544 g_display = Adafruit_PCD8544(7, 6, 5, 4, 3);
+Rotary g_rotary = Rotary(PIN_ROTARY_CLK, PIN_ROTARY_DATA, PIN_ROTARY_BTN);
+Adafruit_PCD8544 g_display = Adafruit_PCD8544(PIN_PCD_CLK, PIN_PCD_DIN, 
+                                              PIN_PCD_DC, PIN_PCD_CS, 
+                                              PIN_PCD_RST);
 
 /* --------------------------------------------------------------------------*/
 
