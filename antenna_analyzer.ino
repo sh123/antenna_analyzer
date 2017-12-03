@@ -132,7 +132,7 @@ void swr_list_shift_right()
 {
   g_swr_list[0] = 0;
   
-  for (int i = SWR_LIST_SIZE - 1; i != 0; i--) {
+  for (int i = SWR_LIST_SIZE - 2; i != 0; i--) {
     g_swr_list[i + 1] = g_swr_list[i];
   }
 }
@@ -141,7 +141,7 @@ void swr_list_shift_left()
 {
   g_swr_list[SWR_LIST_SIZE - 1] = 0;
   
-  for (int i = 0; i < SWR_LIST_SIZE - 1; i++) {
+  for (int i = 0; i < SWR_LIST_SIZE - 2; i++) {
     g_swr_list[i] = g_swr_list[i + 1];
   }
 }
@@ -289,7 +289,7 @@ void band_rotate_frequency(int dir)
   }
   
   generator_set_frequency(g_active_band.freq);
-}
+ }
 
 void band_rotate_step(int dir)
 {
