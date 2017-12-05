@@ -20,10 +20,10 @@ SWR from 160m band up to 1.25m. The limit from Etherkit Si5351 library is 225MHz
 
 Next peripherals are in use:
 
- * Nokia 5110 screen, PCD8544
- * Rotary encoder
+ * Nokia 5110 screen, PCD8544 - https://www.sparkfun.com/datasheets/LCD/Monochrome/Nokia5110.pdf
  * Si5351 clock generator - https://www.adafruit.com/datasheets/Si5351.pdf
  * Reflectometer/VSWR Bridge as per http://www.hamstack.com/hs_projects/k6bez_antenna_analyzer.pdf
+ * Rotary encoder
  * You will also need a set of low pass filters to get sine wave at desired bands as si5351 is a clock generator
 
 Requirements:
